@@ -35,13 +35,12 @@ public class Main {
     protected static JPanel p = new JPanel();
 
     public static void main(String[] args) {
-        if (((r.maxMemory() / 1024) / 1024) < 10) {
+        if (((r.maxMemory() / 1024) / 1024) < 5) {
             System.err.println("System does not meet the requirements to run jShell.");
-            System.err.println("JVM max memory of " + (r.maxMemory() / 1024 / 1024) + " MB does not meet the required 10 MB");
+            System.err.println("JVM max memory of " + (r.maxMemory() / 1024 / 1024) + " MB does not meet the required 5 MB");
             System.exit(1);
             return;
         }
-        System.out.println("Starting jShell version " + VERSION);
         System.out.println(getInfo());
 
         JFrame f = new JFrame();
@@ -70,37 +69,24 @@ public class Main {
         JMenuBar b = new JMenuBar();
         JMenu e = new JMenu("Exit");
         e.addActionListener((l) -> System.exit(0));
-        e.addMouseListener(new MouseClick() {
-            @Override public void mouseClicked(MouseEvent e) {System.exit(0);}
-        });
+        e.addMouseListener(new MouseClick() { @Override public void mouseClicked(MouseEvent e) {System.exit(0);}});
         JMenu a = new JMenu("About jShell");
-        a.addMouseListener(new MouseClick() {
-            @Override public void mouseClicked(MouseEvent e) { showAbout(); }
-        });
+        a.addMouseListener(new MouseClick() { @Override public void mouseClicked(MouseEvent e) { showAbout(); }});
 
         JMenu program = new JMenu("Programs");
         JMenuItem wb = program.add("Web Browser");
         wb.addActionListener((l) -> { startBrowser(); });
 
-        JMenuItem np = program.add("NotePad");
-        np.addActionListener((l) -> { try {
-            emptyNotePad();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        } });
-
         JMenuItem fe = program.add("File Explorer");
         fe.addActionListener((l) -> { 
             File dir = desktop;
-            while (dir.getParent() != null) {
-                dir = dir.getParentFile();
-            }
+            while (dir.getParent() != null) dir = dir.getParentFile();
+
             newFileExplorer(dir); 
         });
-        
-        JMenuItem lw = program.add("Lite Web Browser");
-        lw.addActionListener((l) -> { startLiteBrowser(); });
 
+        program.add("NotePad").addActionListener((l) -> emptyNotePad());
+        program.add("Lite Web Browser").addActionListener((l) -> startLiteBrowser());
         program.add("Calcalator").addActionListener((l) -> startCalc());
         program.add("Minesweeper").addActionListener((l) -> minesweeper());
 
@@ -156,9 +142,11 @@ public class Main {
         }
     }
     
-    protected static void emptyNotePad() throws IOException {
+    protected static void emptyNotePad() {
         File desktop = new File(new File(System.getProperty("user.home")), "Desktop");
-        newNotePad(new File(desktop, "New-Doc-" + new Random().nextInt(20) + ".txt"));
+        try {
+            newNotePad(new File(desktop, "New-Doc-" + new Random().nextInt(20) + ".txt"));
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     protected static void newNotePad(File file) throws IOException {
@@ -193,21 +181,12 @@ public class Main {
     }
 
     private static void startBrowser() {
-        JInternalFrame inf = new JInternalFrame("ZunoZap for jShell");
-        JFXPanel pan = new JFXPanel();
+        new JFXPanel();
         Platform.runLater(() -> {
-            WebView w = new WebView();
-            WebEngine e = w.getEngine();
-            e.setUserAgent(e.getUserAgent() + " ZunoZap/0.1-jShell jShell/1.0");
-            e.load("https://start.duckduckgo.com/");
-            pan.setScene(new Scene(w));
+            try {
+                Browser.main(null);
+            } catch (Exception e) { e.printStackTrace(); }
         });
-        inf.setContentPane(pan);
-        inf.setClosable(true);
-        new DragListener(inf, MouseEvent.BUTTON1).addHandle(inf);
-        inf.setSize(200, 200);
-        inf.setVisible(true);
-        p.add(inf);
     }
     
     private static void startLiteBrowser() {
@@ -217,9 +196,7 @@ public class Main {
         new DragListener(inf, MouseEvent.BUTTON1).addHandle(inf);
         inf.setSize(200, 500);
         Timer timer = new Timer(1000, new ActionListener() {
-            @Override public void actionPerformed(ActionEvent arg0) {
-                inf.setSize(inf.getWidth(), 480);
-            }
+            @Override public void actionPerformed(ActionEvent arg0) { inf.setSize(inf.getWidth(), 480); }
           });
         timer.setRepeats(false);
           timer.start();
@@ -242,9 +219,7 @@ public class Main {
         inf.setClosable(true);
         inf.setVisible(true);
         Timer timer = new Timer(500, new ActionListener() {
-            @Override public void actionPerformed(ActionEvent arg0) {
-                inf.setSize(inf.getWidth(), 350);
-            }
+            @Override public void actionPerformed(ActionEvent a) { inf.setSize(inf.getWidth(), 350); }
           });
         timer.setRepeats(false);
         timer.start();
@@ -255,7 +230,7 @@ public class Main {
     private static void showAbout() {
         JInternalFrame inf = new JInternalFrame("About jShell");
         JPanel pan = new JPanel();
-        JTextArea n = new JTextArea(" jShell");
+        JTextArea n = new JTextArea(" jShell 1");
         n.setFont(new Font("Arial", Font.BOLD, 32));
         JTextArea a = new JTextArea(getInfo());
         n.setEditable(false);
