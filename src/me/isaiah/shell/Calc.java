@@ -10,13 +10,14 @@ import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class Calc extends JInternalFrame implements ActionListener{
+public class Calc extends JProgram implements ActionListener{
     private JTextField display = new JTextField("0");
     private double result = 0;
     private String operator = "=";
     private boolean calculating = true;
    
     public Calc() {
+      super("Calc");
       setLayout(new BorderLayout());
    
       display.setEditable(false);

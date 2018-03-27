@@ -1,6 +1,7 @@
 package me.isaiah.shell;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 
 import javax.swing.JButton;
@@ -21,5 +22,7 @@ public class Icon extends JButton {
         
         if (name.length() > 14) this.setFont(new Font("Arial", Font.PLAIN, 7));
         else this.setFont(new Font("Arial", Font.PLAIN, 10));
+ 
+        this.setMaximumSize(new Dimension(1000000, 10));
     }
 }

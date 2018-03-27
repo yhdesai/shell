@@ -58,7 +58,6 @@ public class Browser extends ZunoAPI {
         try {
             bmread = new Reader(menuBook);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         Stage st = new Stage();
@@ -130,8 +129,7 @@ public class Browser extends ZunoAPI {
         pan.setScene(scene);
         inf.setContentPane(pan);
         inf.setClosable(true);
-        new DragListener(inf, MouseEvent.BUTTON1).addHandle(inf);
-        inf.setSize(200, 200);
+        inf.setSize(400, 400);
         inf.setVisible(true);
         Main.p.add(inf);
     }

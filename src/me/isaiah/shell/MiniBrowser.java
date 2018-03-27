@@ -9,7 +9,7 @@ import javax.swing.event.*;
 import javax.swing.text.html.*;
  
 // The Simple Web Browser.
-public class MiniBrowser extends JInternalFrame
+public class MiniBrowser extends JProgram
         implements HyperlinkListener {
     // These are the buttons for iterating through the page list.
     private JButton backButton, forwardButton;

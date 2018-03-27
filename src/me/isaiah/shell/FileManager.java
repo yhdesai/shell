@@ -71,29 +71,19 @@ TODO Functionality
 @version 2011-06-01 (jShell: Edit 3/25/2018)
 */
 public class FileManager {
+    public static final String APP_TITLE = "FileMan"; // Title
+    private Desktop desktop; // Used to open/edit/print
+    private FileSystemView fileSystemView; // provides nice icons for files
 
-    /** Title of the application */
-    public static final String APP_TITLE = "FileMan";
-    /** Used to open/edit/print files. */
-    private Desktop desktop;
-    /** Provides nice icons and names for files. */
-    private FileSystemView fileSystemView;
-
-    /** currently selected File. */
     private File currentFile;
-
-    /** Main GUI container */
     private JPanel gui;
 
-    /** File-system tree. Built Lazily */
-    private JTree tree;
+    private JTree tree; // File-system tree. Built Lazily
     private DefaultTreeModel treeModel;
 
-    /** Directory listing */
-    private JTable table;
+    private JTable table; // Dir listing
     private JProgressBar progressBar;
-    /** Table model for File[]. */
-    private FileTableModel fileTableModel;
+    private FileTableModel fileTableModel; // Table model for File[]
     private ListSelectionListener listSelectionListener;
     private boolean cellSizesSet = false;
     private int rowIconPadding = 6;
@@ -232,8 +222,13 @@ public class FileManager {
             openFile.setMnemonic('o');
 
             openFile.addActionListener((ae) -> {
+                if (currentFile.isDirectory()) {
+                    //showChildren(currentFile);
+                    setFileDetails(currentFile);
+                } else {
                     try { desktop.open(currentFile); } catch(Throwable t) { showThrowable(t);} // TODO
                     gui.repaint();
+                }
             });
             toolBar.add(openFile);
 
@@ -480,13 +475,7 @@ public class FileManager {
                     setColumnWidth(0,-1);
                     setColumnWidth(3,60);
                     table.getColumnModel().getColumn(3).setMaxWidth(120);
-                    /*setColumnWidth(4,-1);
-                    setColumnWidth(5,-1);
-                    setColumnWidth(6,-1);
-                    setColumnWidth(7,-1);
-                    setColumnWidth(8,-1);
-                    setColumnWidth(9,-1);
-                    */for (int i = 4; i < 10; i++) setColumnWidth(i,-1);
+                    for (int i = 4; i < 10; i++) setColumnWidth(i,-1);
 
                     cellSizesSet = true;
                 }
