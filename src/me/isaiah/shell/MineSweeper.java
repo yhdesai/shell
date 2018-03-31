@@ -32,44 +32,42 @@ import javax.swing.JPanel;
  * @blog http://adchowdhury.blogspot.com/
 */
 
-public class MineSweeper extends JPanel implements AWTEventListener, ActionListener {
+public class MineSweeper extends JProgram implements AWTEventListener, ActionListener {
+    public static enum State {
+        Clicked, Marked, Initial, WrongMarked
+    }
 
-  public static enum State {
-    Clicked, Marked, Initial, WrongMarked
-  }
+    public static enum GameState {
+        NotStarted, Playing, Finished
+    }
 
-  public static enum GameState {
-    NotStarted, Playing, Finished
-  }
+    private static final int  MAX_BOMB_COUNT  = 10;
+    private int ROWS = 9, COLUMNS = 9, TOTAL = ROWS * COLUMNS;
+    private JPanel pnlMain = new JPanel(new GridLayout(ROWS, COLUMNS));
+    private JLabel lblBombCount = new JLabel(MAX_BOMB_COUNT + "");
+    private JLabel lblTimer = new JLabel("0");
+    private boolean isColorCheatOn = false;
+    private JButton btnReset = new JButton("Reset");
 
-  private static final int  MAX_BOMB_COUNT  = 10;
-  private int          ROWS      = 9, COLUMNS = 9, TOTAL = ROWS * COLUMNS;
-  private JPanel        pnlMain      = new JPanel(new GridLayout(ROWS, COLUMNS));
-  private JLabel        lblBombCount  = new JLabel(MAX_BOMB_COUNT + "");
-  private JLabel        lblTimer    = new JLabel("0");
-  private boolean        isColorCheatOn  = false;
-  private JButton        btnReset    = new JButton("Reset");
+    private void startThread() {
+        Thread th = new Thread(new Runnable() {
+            public void run() {
+                while (state == GameState.Playing) {
+                    lblTimer.setText((Long.parseLong(lblTimer.getText()) + 1) + "");
+                    lblTimer.updateUI();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) { e.printStackTrace(); }
+                }
+            }
+        });
+        th.start();
+    }
 
-  private void startThread() {
-    Thread th = new Thread(new Runnable() {
-      public void run() {
-        while (state == GameState.Playing) {
-          lblTimer.setText((Long.parseLong(lblTimer.getText()) + 1) + "");
-          lblTimer.updateUI();
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-      }
-    });
-    th.start();
-  }
-
-  private GameState  state  = GameState.NotStarted;
+    private GameState state = GameState.NotStarted;
 
   public MineSweeper() {
+      super("Minesweeper by Aniruddha Dutta Chowdhury");
     setLayout(new BorderLayout());
     add(pnlMain, BorderLayout.CENTER);
     createButtons();

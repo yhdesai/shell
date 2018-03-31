@@ -3,90 +3,77 @@ package me.isaiah.shell;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.Random;
 
 import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
-import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.Timer;
+
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
+import net.sf.jcarrierpigeon.Notification;
+import net.sf.jcarrierpigeon.NotificationQueue;
+import net.sf.jcarrierpigeon.WindowPosition;
 
 public class Main {
-    public static final String VERSION = "0.2";
+    public static final String VERSION = "0.3";
     public static final Runtime r = Runtime.getRuntime();
-    public static int ram = (int) ((r.maxMemory() / 1024) / 1024);
+    public static final int ram = (int) ((r.maxMemory() / 1024) / 1024);
+    private static String mem;
     public static boolean supportsFxBrowser = true;
-    protected static JDesktopPane p = new JDesktopPane();
+    protected static final JDesktopPane p = new JDesktopPane();
 
     public static void main(String[] args) {
-        if (ram < 20) {
-            System.err.println("System does not meet the requirements to run jShell.");
-            System.err.println("JVM max memory of " + ram + " MB does not meet the required 20 MB");
-            System.exit(1);
-            return;
-        }
+        if (ram < 20) System.err.println("[WARN] JVM memory (" + ram + " MB) is not > 20 MB for good proformance!");
+
         if (ram < 200) {
             supportsFxBrowser = false;
-            System.err.println("System does not meet the requirements to run the web browser");
-            System.err.println("JVM max memory of " + ram + " MB does not meet the required 200 MB");
+            System.err.println("JVM max memory of " + ram + " MB does not meet the required 200 MB for web browsing!");
+            System.out.println("Disabling ZunoZap Browser.");
         }
+        double m = ram;
+        if (m > 1024) {
+            m = m / 1024;
+            String ms = String.valueOf(m);
+            if (ms.split("[.]")[1].length() > 3) mem = Double.valueOf(ms.substring(0, ms.indexOf(".") + 2)) + " GB";
+            else mem = m + " GB";
+        } else mem = m + " MB";
+
         System.out.println("Running jShell version " + VERSION);
 
         JFrame f = new JFrame();
         f.setBackground(Color.ORANGE);
-        //f.setLayout(null);
 
         File desktop = new File(new File(System.getProperty("user.home")), "Desktop");
-        //int len = desktop.listFiles().length;
-        //JPanel pa = new JPanel(new GridLayout(len > 5 ? len / 5 : 3, 1));
-        /*JProgram in = new JProgram("Desktop");
-        for (File file : desktop.listFiles()) {
-            Icon i = new Icon(file.getName(), file.isDirectory());
-            new DragListener(i).addHandle(i);
-
-            pa.add(i);
-
-            i.addActionListener((l) -> newFileExplorer(file));
-        }
-        in.setSize(pa.getMinimumSize());
-        in.setContentPane(pa);
-        in.setClosable(true);
-        new DragListener(in, MouseEvent.BUTTON1).addHandle(in);
-        in.setVisible(true);
-        p.add(in);*/
         newFileExplorer(desktop);
 
         p.setBackground(new Color(51, 153, 255));
 
         JMenuBar b = new JMenuBar();
-        JMenu e = new JMenu("Exit");
-        e.addActionListener((l) -> System.exit(0));
-        e.addMouseListener(new MouseClick() { @Override public void mouseClicked(MouseEvent e) {System.exit(0);}});
-        JMenu a = new JMenu("About jShell");
-        a.addMouseListener(new MouseClick() { @Override public void mouseClicked(MouseEvent e) { showAbout(); }});
+        b.add(new JMenu("Exit")).addMouseListener(new MouseClick() { @Override public void mouseClicked(MouseEvent e) {System.exit(0);}});
+        b.add(new JMenu("About jShell")).addMouseListener(new MouseClick(){ @Override public void mouseClicked(MouseEvent e) {about();}});
 
         JMenu program = new JMenu("Programs");
         JMenuItem wb = program.add("Web Browser");
@@ -97,40 +84,84 @@ public class Main {
         fe.addActionListener((l) -> { 
             File dir = desktop;
             while (dir.getParent() != null) dir = dir.getParentFile();
-
             newFileExplorer(dir); 
         });
 
         program.add("NotePad").addActionListener((l) -> emptyNotePad());
-        program.add("Lite Web Browser").addActionListener((l) -> startLiteBrowser());
-        program.add("Calcalator").addActionListener((l) -> startCalc());
-        program.add("Minesweeper").addActionListener((l) -> minesweeper());
+        program.add("Lite Web Browser").addActionListener((l) -> start(new MiniBrowser(), 300, 500));
+        program.add("Calcalator").addActionListener((l) -> start(new Calc(), 200, 200));
+        program.add("Minesweeper").addActionListener((l) -> start(new MineSweeper(), 250, 350));
 
-        b.add(e);
-        b.add(a);
         b.add(program);
         f.setJMenuBar(b);
-        System.out.println(p.getAllFrames().length);
 
-        //JPanel pae = new JPanel();
         p.setVisible(true);
-        //pae.add(p);
         f.setContentPane(p);
         f.setExtendedState(JFrame.MAXIMIZED_BOTH);
         f.setUndecorated(true);
         f.setMaximumSize(new Dimension(500,500));
         f.pack();
         f.setVisible(true);
+
+        String l = getUrlSource("https://api.github.com/repos/isaiahpatton/shell/releases/latest");
+        if (!l.equalsIgnoreCase("internet")) {
+            l = l.substring(l.indexOf("\"tag_name\":\"") + 12);
+            l = l.substring(0, l.indexOf("\","));
+        } else showNotification("Could not connect to api.github.com\nto get update infomation.", new Font("Arial", Font.PLAIN, 13),
+                5000, 320, 60);
+
+        if (!l.equalsIgnoreCase("internet") && !l.equalsIgnoreCase(VERSION)) {
+            JFrame n = new JFrame();
+            n.setSize(420,110);
+            JTextArea text = new JTextArea("A new jShell Update is ready to be downloaded!"
+                    + "\n   Current version: " + VERSION + "\n   Latest version: " + l + "\nhttp://isaiahpatton.github.io/jshell/");
+            text.setFont(new Font("Arial", Font.BOLD, 14));
+            text.setMargin(new Insets(10, 10, 10, 10));
+            text.setEditable(false);
+            n.add(text);
+            n.setUndecorated(true);
+            n.setVisible(true);
+            Notification note = new Notification(n, WindowPosition.BOTTOMRIGHT, 0, 0, 15000);
+            NotificationQueue queue = new NotificationQueue();
+            queue.add(note);
+        }
+    }
+
+    public static String getUrlSource(String url) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openConnection().getInputStream(), "UTF-8"))) {
+            String line;
+            StringBuilder a = new StringBuilder();
+            while ((line = in.readLine()) != null) a.append(line);
+
+            return a.toString();
+        } catch (IOException e) { return "internet"; }
+    }
+
+    public static void showNotification(String tex, int ms) {
+        showNotification(tex, new Font("Arial", Font.PLAIN, 13), ms, 420, 110);
+    }
+    
+    public static void showNotification(String tex, Font f, int ms, int width, int height) {
+        JFrame n = new JFrame();
+        n.setSize(width,height);
+        JTextArea text = new JTextArea(tex);
+        text.setFont(f);
+        text.setMargin(new Insets(10, 10, 10, 10));
+        text.setEditable(false);
+        n.add(text);
+        n.setUndecorated(true);
+        n.setVisible(true);
+        Notification note = new Notification(n, WindowPosition.BOTTOMRIGHT, 0, 0, 15000);
+        NotificationQueue queue = new NotificationQueue();
+        queue.add(note);
     }
 
     public static String getInfo() {
-        return "Created by Isaiah Patton\n"
-                + "Version " + VERSION + "\n"
-                + "Installed RAM: " + ram + " MB\n"
-                + "Java version: " + System.getProperty("java.version")
-                + "\n\nSoftware used:\n"
-                + " - Calculator @ javacodex.com\n"
-                + " - MineSweeper @ java2s.com"; 
+        return "Version " + VERSION + "\n"
+                + "Installed RAM: " + mem + "\nJava version: " + System.getProperty("java.version")
+                + "\n\nMade possible by:\n"
+                + " - Calculator @ javacodex.com\n - MineSweeper @ java2s.com\n"
+                + " - JCarrierPigeon @ carrierpigeon.sourceforge.net";
     }
 
     protected static void newFileExplorer(File file) {
@@ -173,9 +204,7 @@ public class Main {
                             pan.validate();
                             pa.validate();
                         } else newFileExplorer(z);
-                    }
-                }
-            });
+                    }}});
             pa.add(pan);
             pa.setLayout(new BoxLayout(pa, BoxLayout.Y_AXIS));
             inf.setSize(pa.getSize());
@@ -187,9 +216,8 @@ public class Main {
             p.add(inf);
         } else {
             String name = file.getName();
-            if (name.endsWith(".txt") || name.endsWith(".text") || name.endsWith(".html")) try {
-                newNotePad(file);
-            } catch (IOException e) { e.printStackTrace(); }
+            if (name.endsWith(".txt") || name.endsWith(".text") || name.endsWith(".html"))
+                try { newNotePad(file); } catch (IOException e) { e.printStackTrace(); showNotification(e.getMessage(), 5000); }
         }
     }
 
@@ -197,100 +225,79 @@ public class Main {
         File desktop = new File(new File(System.getProperty("user.home")), "Desktop");
         try {
             newNotePad(new File(desktop, "New-Doc-" + new Random().nextInt(20) + ".txt"));
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); showNotification(e.getMessage(), 5000); }
     }
 
     protected static void newNotePad(File file) throws IOException {
         file.createNewFile();
         JProgram inf = new JProgram("[NotePad] " + file.getName());
-        new DragListener(inf, MouseEvent.BUTTON1).addHandle(inf);
         String text = "\n";
         if (file != null) for (String s : Files.readAllLines(file.toPath())) text += "\n" + s;
 
         JPanel pa = new JPanel();
         JTextArea a = new JTextArea(text);
         a.setMargin(new Insets(5, 8, 5, 8));
-        JButton s = new JButton("Save");
+        pa.setLayout(new BoxLayout(pa, BoxLayout.Y_AXIS));
         a.setWrapStyleWord(true);
         a.setSize(200, 300);
-        s.setSize(50, 50);
-
-        s.addActionListener((l) -> {
-            try {
-                Files.write(file.toPath(), a.getText().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        JMenuBar m = new JMenuBar();
+        JMenu mf = new JMenu("File");
+        mf.add("Save").addActionListener((l) -> {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"))) {
+                for (String line : a.getText().split("\n")) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) { showNotification(e.getMessage(), 5000); e.printStackTrace(); }
         });
-        pa.add(a);
-        pa.add(s);
+        JScrollPane sc = new JScrollPane();
+        sc.setViewportView(a);
+
+        pa.add(sc);
+        m.add(mf);
         inf.setContentPane(pa);
         inf.setClosable(true);
-        inf.setSize(new Dimension(320,300));
+        inf.setJMenuBar(m);
+        inf.setSize(new Dimension(520,500));
         inf.setVisible(true);
         p.add(inf);
     }
 
     private static void startBrowser() {
         new JFXPanel();
-        Platform.runLater(() -> {
-            try { Browser.main(null); } catch (Exception e) { e.printStackTrace(); }
-        });
+        Platform.runLater(() -> { try { Browser.main(null); } catch (Exception e) { showNotification(e.getMessage(), 5000);
+            e.printStackTrace(); }});
     }
 
-    private static void startLiteBrowser() {
-        JProgram inf = new MiniBrowser();
-
-        inf.setClosable(true);
-        inf.setSize(200, 500);
-        Timer timer = new Timer(1000, new ActionListener() {
-            @Override public void actionPerformed(ActionEvent arg0) { inf.setSize(inf.getWidth(), 480); }
-          });
-        timer.setRepeats(false);
-          timer.start();
-        inf.setVisible(true);
-        p.add(inf);
+    @SuppressWarnings("unused")
+    private static final void programManager() {
+        JProgram inf = new ProgramListing("Program Manager");
+        start(inf, 250, 350);
     }
 
-    private static void startCalc() {
-        JProgram inf = new Calc();
-        inf.setClosable(true);
-        inf.setVisible(true);
-        inf.setSize(200,200);
-        p.add(inf);
-    }
-
-    private static void minesweeper() {
-        JProgram inf = new JProgram("MineSweeper");
-        inf.setContentPane(new MineSweeper());
-        inf.setClosable(true);
-        inf.setVisible(true);
-        Timer timer = new Timer(500, new ActionListener() {
-            @Override public void actionPerformed(ActionEvent a) { inf.setSize(inf.getWidth(), 350); }
-          });
-        timer.setRepeats(false);
-        timer.start();
-        inf.setSize(250, 350);
-        p.add(inf);
-    }
-
-    private static void showAbout() {
+    private static final void about() {
         JProgram inf = new JProgram("About jShell");
         JPanel pan = new JPanel();
-        JTextArea n = new JTextArea(" jShell 1");
-        n.setFont(new Font("Arial", Font.BOLD, 32));
+        JTextArea n = new JTextArea(" jShell");
+        n.setFont(new Font("Arial", Font.BOLD, 29));
         JTextArea a = new JTextArea(getInfo());
         n.setEditable(false);
         a.setMargin(new Insets(0, 5, 5, 5));
         n.setMargin(new Insets(5, 5, 0, 5));
         a.setEditable(false);
-        pan.setLayout(new GridLayout(2, 0));
+        n.setMaximumSize(new Dimension(50000, 250));
+        pan.setLayout(new BoxLayout(pan, BoxLayout.Y_AXIS));
         pan.add(n);
         pan.add(a);
-        inf.setSize(300, 300);
+        inf.setSize(345, 300);
         inf.setContentPane(pan);
-        inf.setClosable(true);
         inf.setVisible(true);
         p.add(inf);
+    }
+
+    private static final void start(JProgram j, int width, int height) {
+        j.setVisible(true);
+        j.setSize(width, height);
+        p.add(j);
     }
 }

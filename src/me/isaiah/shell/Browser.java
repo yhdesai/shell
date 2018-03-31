@@ -1,6 +1,5 @@
 package me.isaiah.shell;
 
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -124,7 +123,7 @@ public class Browser extends ZunoAPI {
         if (allowPluginEvents()) for (PluginBase pl : p.plugins) pl.onLoad(stage, scene, tb);
         
         
-        JInternalFrame inf = new JInternalFrame("ZunoZap for jShell");
+        JProgram inf = new JProgram("ZunoZap for jShell");
         JFXPanel pan = new JFXPanel();
         pan.setScene(scene);
         inf.setContentPane(pan);

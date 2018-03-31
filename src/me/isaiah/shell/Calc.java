@@ -77,5 +77,4 @@ public class Calc extends JProgram implements ActionListener{
       }
       display.setText("" + result);
     }
-   
-  }
+ }
