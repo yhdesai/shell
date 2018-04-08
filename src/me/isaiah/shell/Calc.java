@@ -4,13 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import me.isaiah.shell.api.JProgram;
+
 public class Calc extends JProgram implements ActionListener{
+    private static final long serialVersionUID = 1L;
     private JTextField display = new JTextField("0");
     private double result = 0;
     private String operator = "=";

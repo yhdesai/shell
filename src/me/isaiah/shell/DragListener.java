@@ -1,4 +1,5 @@
 package me.isaiah.shell;
+
 import java.awt.Component;
 import java.awt.MouseInfo;
 import java.awt.Point;
@@ -10,7 +11,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.Timer;
 
 public class DragListener extends MouseAdapter {
-
     private final Component COMPONENT_TO_DRAG;
     private final int MOUSE_BUTTON;
     private Point mousePosition;
@@ -30,15 +30,13 @@ public class DragListener extends MouseAdapter {
         this.dragging = false;
     }
 
-    @Override
-    public void mousePressed(final MouseEvent e) {
+    @Override public void mousePressed(final MouseEvent e) {
         this.buttonPressed = e.getButton();
         this.mousePosition = MouseInfo.getPointerInfo().getLocation();
         this.sourceLocation = new Point();
     }
 
-    @Override
-    public void mouseDragged(final MouseEvent e) {
+    @Override public void mouseDragged(final MouseEvent e) {
         if (this.buttonPressed == MOUSE_BUTTON) {
             this.dragging = true;
             this.locationOnScreen = e.getLocationOnScreen();
@@ -51,32 +49,14 @@ public class DragListener extends MouseAdapter {
         }
     }
 
-    public void fix() {
-        if (lastdragloc != null) {
-            COMPONENT_TO_DRAG.setLocation(lastdragloc);
-        }
-    }
-
     public void addHandle(Component handle) {
         handle.addMouseListener(this);
         handle.addMouseMotionListener(this);
-        int delay = 800; //milliseconds
         ActionListener taskPerformer = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                if (lastdragloc != null && !dragging) {
-                    COMPONENT_TO_DRAG.setLocation(lastdragloc);
-                }
+                if (lastdragloc != null && !dragging) COMPONENT_TO_DRAG.setLocation(lastdragloc);
             }
         };
-        new Timer(delay, taskPerformer).start();
-        
-        ActionListener taskPerformer2 = new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                if (lastdragloc != null) {
-                    System.gc();
-                }
-            }
-        };
-        new Timer(10000, taskPerformer2).start();
+        new Timer(1000, taskPerformer).start();
     }
 }

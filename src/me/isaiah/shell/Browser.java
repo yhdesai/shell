@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
 import javafx.embed.swing.JFXPanel;
@@ -29,6 +27,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import me.isaiah.shell.api.JProgram;
+import me.isaiah.shell.api.JProgramInfo;
 import me.isaiah.zunozap.Info;
 import me.isaiah.zunozap.Reader;
 import me.isaiah.zunozap.Settings;
@@ -39,7 +39,8 @@ import me.isaiah.zunozap.ZunoAPI;
 import me.isaiah.zunozap.ZunoZap;
 import me.isaiah.zunozap.plugin.PluginBase;
 
-@Info(name="ZunoZap", version="0.5.4-jShell", engine = Engine.WEBKIT)
+@Info(name="ZunoZap", version="0.5.4-shell", engine = Engine.WEBKIT)
+@JProgramInfo(name = "ZunoZap Browser", version="0.5.4", authors="Contributers", width=1000, height=650)
 public class Browser extends ZunoAPI {
     public static final File home = new File(System.getProperty("user.home"), "zunozap");
     private static Reader bmread;
@@ -53,21 +54,9 @@ public class Browser extends ZunoAPI {
             Settings.save(false);
             firstRun = true;
         }
-        Platform.runLater(() -> {
-        try {
-            bmread = new Reader(menuBook);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { bmread = new Reader(menuBook); } catch (IOException e) { e.printStackTrace(); }
         Stage st = new Stage();
-        try {
-            getInstance().start(st);
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        });
-        //launch(Browser.class, args);
+        getInstance().start(st);
     }
 
     @Override
@@ -77,9 +66,6 @@ public class Browser extends ZunoAPI {
 
         root.getChildren().add(border);
         Scene scene = new Scene(root, 1200, 600);
-
-        if (isValid()) version = getInfo().version();
-        else log.println("Note: This program is not valid.");
 
         en = getInfo().engine();
 
@@ -100,7 +86,7 @@ public class Browser extends ZunoAPI {
         tb.setPrefSize(1365, 768);
         tb.setSide(Side.TOP);
 
-        /// Setup tabs
+        // Setup tabs
         Tab newtab = new Tab(" + ");
         newtab.setClosable(false);
         tb.getTabs().add(newtab);
@@ -114,8 +100,8 @@ public class Browser extends ZunoAPI {
 
         WebView dummy = new WebView();
         setUserAgent(dummy.getEngine());
-        //regMenuItems(bmread, menuFile, menuBook, aboutPageHTML("Java WebView", dummy.getEngine().getUserAgent(), "ZunoZap/zunozap/master/LICENCE", "LGPLv3", "N/A"), tb, Engine.WEBKIT);
-        //menuBar.getMenus().addAll(menuFile, menuBook);
+        regMenuItems(bmread, menuFile, menuBook, aboutPageHTML("Java WebView", dummy.getEngine().getUserAgent(), "ZunoZap/zunozap/master/LICENCE", "LGPLv3", "N/A"), tb, Engine.WEBKIT);
+        menuBar.getMenus().addAll(menuFile, menuBook);
         Settings.set(cssDir, scene);
         scene.getStylesheets().add(ZunoAPI.stylesheet.toURI().toURL().toExternalForm());
 
@@ -128,7 +114,7 @@ public class Browser extends ZunoAPI {
         pan.setScene(scene);
         inf.setContentPane(pan);
         inf.setClosable(true);
-        inf.setSize(400, 400);
+        inf.setSize(1000, 650);
         inf.setVisible(true);
         Main.p.add(inf);
     }
@@ -174,7 +160,7 @@ public class Browser extends ZunoAPI {
         setUserAgent(engine);
         engine.javaScriptEnabledProperty().set(Options.javascript.b);
 
-        if (isStartTab) engine.load("https://zunozap.github.io/pages/startpage.html");
+        if (isStartTab) engine.load("https://start.duckduckgo.com/?ref=zunozap");
         else loadSite(url, e);
 
         tab.setContent(vBox);
@@ -201,7 +187,7 @@ public class Browser extends ZunoAPI {
                     } catch (MalformedURLException e) { e.printStackTrace(); }
                     return;
                 }
-                en.loadContent("Unable to load " + en.getLocation().trim());
+                en.loadContent("ZunoZap Browser is unable to load " + en.getLocation().trim());
                 return;
             }
         });
@@ -212,11 +198,11 @@ public class Browser extends ZunoAPI {
             boolean bad = false;
             if (popupText.toString().toLowerCase().contains("virus")) {
                 bad = true;
-                say("The site you are visting has tryed to create an popup with the word 'virus' in it, Please be carefull on this site", 2);
+                say("The site you are visting has tryed to create an popup with the word 'virus' in it, Please be careful on this site", 2);
             }
             if (allowPluginEvents()) for (PluginBase pl : p.plugins) pl.onPopup(bad);
 
-            JOptionPane.showMessageDialog(null, popupText.getData(), "JS Popup", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showInternalMessageDialog(null, popupText.getData(), "JS Popup", JOptionPane.INFORMATION_MESSAGE);
         });
         en.titleProperty().addListener((ov, o, n) -> tab.setText(n));
     }
@@ -227,7 +213,5 @@ public class Browser extends ZunoAPI {
 
     @Override
     public void start(Stage arg0, Scene arg1, StackPane arg2, BorderPane arg3) throws Exception {
-        // TODO Auto-generated method stub
-        
     }
 }

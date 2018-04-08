@@ -19,6 +19,7 @@ public class Icon extends JButton {
         else this.setBackground(Color.CYAN);
         
         if (name.endsWith(".txt") || name.endsWith(".text") || name.endsWith(".html")) this.setBackground(Color.GREEN);
+        if (name.endsWith(".jar")) this.setBackground(Color.YELLOW);
         
         if (name.length() > 14) this.setFont(new Font("Arial", Font.PLAIN, 7));
         else this.setFont(new Font("Arial", Font.PLAIN, 10));

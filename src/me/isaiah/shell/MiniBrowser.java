@@ -1,198 +1,129 @@
 package me.isaiah.shell;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.net.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.text.html.*;
- 
-// The Simple Web Browser.
-public class MiniBrowser extends JProgram
-        implements HyperlinkListener {
-    // These are the buttons for iterating through the page list.
-    private JButton backButton, forwardButton;
-     
-    // Page location text field.
-    private JTextField locationTextField;
-     
-    // Editor pane for displaying pages.
-    private JEditorPane displayEditorPane;
-     
-    // Browser's list of pages that have been visited.
-    private ArrayList pageList = new ArrayList();
-     
-    // Constructor for Mini Web Browser.
+import java.awt.BorderLayout;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+
+import me.isaiah.shell.api.JProgram;
+
+public class MiniBrowser extends JProgram {
+    private static final long serialVersionUID = 1L;
+    private JTabbedPane tabbedPane = new JTabbedPane();
+
     public MiniBrowser() {
-        // Set application title.
-        super("Mini Browser");
-         
-        // Set window size.
-        setSize(640, 480);
-         
-        // Set up file menu.
-        JMenuBar menuBar = new JMenuBar();
+        super("Swing Web Browser");
+
+        createNewTab();
+        getContentPane().add(tabbedPane);
+
         JMenu fileMenu = new JMenu("File");
-        fileMenu.setMnemonic(KeyEvent.VK_F);
-        JMenuItem fileExitMenuItem = new JMenuItem("Exit",
-                KeyEvent.VK_X);
-        fileExitMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-                dispose();
-            }
-        });
-        fileMenu.add(fileExitMenuItem);
+        fileMenu.add(new JMenu("New Tab")).addMouseListener(new MouseClick(){ @Override public void click(MouseEvent e) { createNewTab(); }});
+        fileMenu.addSeparator();
+        fileMenu.setMnemonic('F');
+
+        JMenuBar menuBar = new JMenuBar();
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
-         
-        // Set up button panel.
-        JPanel buttonPanel = new JPanel();
-        backButton = new JButton("< Back");
-        backButton.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { actionBack();}});
-        backButton.setEnabled(false);
-        buttonPanel.add(backButton);
-        forwardButton = new JButton("Forward >");
-        forwardButton.addActionListener(new ActionListener() { public void actionPerformed(ActionEvent e) {actionForward();}});
-        forwardButton.setEnabled(false);
-        buttonPanel.add(forwardButton);
-        locationTextField = new JTextField(35);
-        locationTextField.addKeyListener(new KeyAdapter() { public void keyReleased(KeyEvent e) { if (e.getKeyCode() == KeyEvent.VK_ENTER) actionGo(); }});
-        buttonPanel.add(locationTextField);
-        JButton goButton = new JButton("GO");
-        goButton.addActionListener(new ActionListener() { public void actionPerformed(ActionEvent e) { actionGo(); } });
-        buttonPanel.add(goButton);
-         
-        // Set up page display.
-        displayEditorPane = new JEditorPane();
-        displayEditorPane.setContentType("text/html");
-        displayEditorPane.setEditable(false);
-        displayEditorPane.addHyperlinkListener(this);
-
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(buttonPanel, BorderLayout.NORTH);
-        getContentPane().add(new JScrollPane(displayEditorPane), BorderLayout.CENTER);
     }
 
-    // Go back to the page viewed before the current page.
-    private void actionBack() {
-        URL currentUrl = displayEditorPane.getPage();
- 
-        int pageIndex = pageList.indexOf(currentUrl.toString());
-        try {
-            showPage(
-                    new URL((String) pageList.get(pageIndex - 1)), false);
-        } catch (Exception e) {}
+    private void createNewTab() {
+        JPanel panel = new JPanel(new BorderLayout());
+        WebBrowserPane browserPane = new WebBrowserPane();
+        WebToolBar toolBar = new WebToolBar(browserPane);
+        panel.add(toolBar, BorderLayout.NORTH);
+        panel.add(new JScrollPane(browserPane), BorderLayout.CENTER);
+        tabbedPane.addTab("Tab " + tabbedPane.getTabCount(), panel);
     }
-     
-    // Go forward to the page viewed after the current page.
-    private void actionForward() {
-        URL currentUrl = displayEditorPane.getPage();
-        int pageIndex = pageList.indexOf(currentUrl.toString());
-        try {
-            showPage(new URL((String) pageList.get(pageIndex + 1)), false);
-        } catch (Exception e) {}
-    }
-     
-    // Load and show the page specified in the location text field.
-    private void actionGo() {
-        URL verifiedUrl = verifyUrl(locationTextField.getText());
-        if (verifiedUrl != null) showPage(verifiedUrl, true);
-        else showError("Invalid URL");
-    }
-     
-    // Show dialog box with error message.
-    private void showError(String errorMessage) {
-        JOptionPane.showMessageDialog(this, errorMessage,
-                "Error", JOptionPane.ERROR_MESSAGE);
-    }
-     
-    // Verify URL format.
-    private URL verifyUrl(String url) {
-        // Only allow HTTP URLs.
-        if (!url.toLowerCase().startsWith("http://"))
-            return null;
-         
-        // Verify format of URL.
-        URL verifiedUrl = null;
-        try {
-            verifiedUrl = new URL(url);
-        } catch (Exception e) {
-            return null;
-        }
-         
-        return verifiedUrl;
-    }
-     
-  /* Show the specified page and add it to
-     the page list if specified. */
-    private void showPage(URL pageUrl, boolean addToList) {
-        // Show hour glass cursor while crawling is under way.
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         
-        try {
-            // Get URL of page currently being displayed.
-            URL currentUrl = displayEditorPane.getPage();
-             
-            // Load and display specified page.
-            displayEditorPane.setPage(pageUrl);
-             
-            // Get URL of new page being displayed.
-            URL newUrl = displayEditorPane.getPage();
-             
-            // Add page to list if specified.
-            if (addToList) {
-                int listSize = pageList.size();
-                if (listSize > 0) {
-                    int pageIndex =
-                            pageList.indexOf(currentUrl.toString());
-                    if (pageIndex < listSize - 1) {
-                        for (int i = listSize - 1; i > pageIndex; i--) {
-                            pageList.remove(i);
-                        }
-                    }
-                }
-                pageList.add(newUrl.toString());
-            }
-             
-            // Update location text field with URL of current page.
-            locationTextField.setText(newUrl.toString());
-             
-            // Update buttons based on the page being displayed.
-            updateButtons();
-        } catch (Exception e) {
-            // Show error messsage.
-            showError("Unable to load page");
-        } finally {
-            // Return to default cursor.
-            setCursor(Cursor.getDefaultCursor());
-        }
+}
+
+class WebBrowserPane extends JEditorPane {
+    private static final long serialVersionUID = 1L;
+    private List<URL> history = new ArrayList<>();
+    private int historyIndex;
+    public WebBrowserPane() { setEditable(false); }
+
+    public void goToURL(URL url) {
+        displayPage(url);
+        history.add(url);
+        historyIndex = history.size() - 1;
     }
 
-    private void updateButtons() {
-        if (pageList.size() < 2) {
-            backButton.setEnabled(false);
-            forwardButton.setEnabled(false);
-        } else {
-            URL currentUrl = displayEditorPane.getPage();
-            int pageIndex = pageList.indexOf(currentUrl.toString());
-            backButton.setEnabled(pageIndex > 0);
-            forwardButton.setEnabled(
-                    pageIndex < (pageList.size() - 1));
-        }
+    public URL forward() {
+        historyIndex++;
+        if (historyIndex >= history.size()) historyIndex = history.size() - 1;
+
+        URL url = (URL) history.get(historyIndex);
+        displayPage(url);
+        return url;
+    }
+
+    public URL back() {
+        historyIndex--;
+        if (historyIndex < 0) historyIndex = 0;
+
+        URL url = (URL) history.get(historyIndex);
+        displayPage(url);
+
+        return url;
+    }
+
+    private void displayPage(URL pageURL) {
+        try { setPage(pageURL); } catch (IOException e) { e.printStackTrace(); }
+    }
+}
+
+class WebToolBar extends JToolBar implements HyperlinkListener {
+    private static final long serialVersionUID = 1L;
+    private WebBrowserPane webBrowserPane;
+    private JButton backButton;
+    private JButton forwardButton;
+    private JTextField urlTextField;
+
+    public WebToolBar(WebBrowserPane browser) {
+        super("Web Navigation");
+
+        webBrowserPane = browser;
+        webBrowserPane.addHyperlinkListener(this);
+
+        urlTextField = new JTextField(25);
+        urlTextField.addActionListener((l) -> {
+            try {
+                webBrowserPane.goToURL(new URL(urlTextField.getText()));
+            } catch (MalformedURLException urlException) {
+                try { webBrowserPane.goToURL(new URL("http://" + urlTextField.getText()));
+            } catch (MalformedURLException e) {e.printStackTrace();}}
+        });
+
+        backButton = new JButton("<");
+        backButton.addActionListener((l) -> urlTextField.setText(webBrowserPane.back().toString()));
+        forwardButton = new JButton(">");
+        forwardButton.addActionListener((l) -> urlTextField.setText(webBrowserPane.forward().toString()));
+        add(backButton);
+        add(forwardButton);
+        add(urlTextField);
     }
 
     public void hyperlinkUpdate(HyperlinkEvent event) {
-        HyperlinkEvent.EventType eventType = event.getEventType();
-        if (eventType == HyperlinkEvent.EventType.ACTIVATED) {
-            if (event instanceof HTMLFrameHyperlinkEvent) {
-                HTMLFrameHyperlinkEvent linkEvent =
-                        (HTMLFrameHyperlinkEvent) event;
-                HTMLDocument document =
-                        (HTMLDocument) displayEditorPane.getDocument();
-                document.processHTMLFrameHyperlinkEvent(linkEvent);
-            } else showPage(event.getURL(), true);
+        if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+            URL url = event.getURL();
+            webBrowserPane.goToURL(url);
+            urlTextField.setText(url.toString());
         }
     }
 }
