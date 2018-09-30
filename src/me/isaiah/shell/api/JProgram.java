@@ -9,6 +9,7 @@ import javax.swing.JInternalFrame;
  * as this is a JInternalFrame
  */
 public class JProgram extends JInternalFrame {
+
     private static final long serialVersionUID = 1L;
 
     /**
@@ -22,12 +23,9 @@ public class JProgram extends JInternalFrame {
     public JProgram(String title, boolean resizable, boolean closable, boolean maximizable) {
         super(title, resizable, closable, maximizable);
         this.toFront();
+        this.iconable = true;
+        this.moveToFront();
+        this.validate();
     }
 
-    /**
-     * Registers this program to the program menu bar.
-     * TODO: This method has no functionality yet.
-     */
-    public void register() {
-    }
 }

@@ -10,6 +10,10 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.Timer;
 
+/**
+ * @deprecated Un-used class.
+ */
+@Deprecated
 public class DragListener extends MouseAdapter {
     private final Component COMPONENT_TO_DRAG;
     private final int MOUSE_BUTTON;

@@ -1,7 +1,7 @@
 package me.isaiah.shell;
 
-import me.isaiah.shell.api.JProgramInfo;
+import me.isaiah.shell.api.ProgramInfo;
 
-@JProgramInfo(name="JFrame")
+@ProgramInfo(name="JFrame")
 public class DemoInfo {
 }

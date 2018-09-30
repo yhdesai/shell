@@ -41,15 +41,21 @@ final class ProgramClassLoader extends URLClassLoader {
                         JFrame f = (JFrame) jarClass.newInstance();
                         JProgram pro = new JProgram(f.getTitle() + " ~ Port");
                         pro.setContentPane(f.getContentPane());
+                        if (f.getJMenuBar() != null) pro.setJMenuBar(f.getJMenuBar());
                         f.setVisible(false);
                         f.setSize(f.getMaximumSize());
                         f.dispose();
                         plugin = pro;
                         return;
                     } catch (ClassCastException e2) {
-                        e2.printStackTrace();
-                        Main.showNotification("java.lang.ClassCastException:\n\n " + jarClass.getName() + " cannot be cast to:\n"
+                        if (jarClass.getName().equalsIgnoreCase("me.isaiah.zunozap.Launcher")) {
+                            Main.showNotification("Launching ZunoZap Browser", 2500, 210, 51);
+                            Main.startBrowser();
+                        } else {
+                            e2.printStackTrace();
+                            Main.showNotification("java.lang.ClassCastException:\n\n " + jarClass.getName() + " cannot be cast to:\n"
                                 + "\tJProgram, JInternalFrame, or JFrame", 3000, 500, 79);
+                        }
                     }
                 }
             }
@@ -63,8 +69,6 @@ final class ProgramClassLoader extends URLClassLoader {
     }
 
     Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
-        if (name.startsWith("me.isaiah.shell")) throw new ClassNotFoundException(name);
-
         Class<?> result = classes.get(name);
 
         if (result == null) {
